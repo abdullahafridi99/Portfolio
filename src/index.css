@@ -33,18 +33,14 @@
 @layer components {
   /* Glassmorphism Panels */
   .glass-panel {
-    background: rgba(11, 15, 25, 0.65);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(11, 15, 25, 0.96); /* Solid/High-opacity panel to avoid expensive backdrop-filter calculations */
     border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
   }
 
   .glass-panel-light {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.04);
   }
 
   /* Text Gradients */
@@ -97,7 +93,7 @@
 
   /* Custom Tech Badge */
   .tech-badge {
-    @apply px-3 py-1 text-xs font-medium rounded-full bg-slate-900/60 text-slate-300 border border-slate-800/80 backdrop-blur-sm transition-all duration-300 hover:border-accent-cyan/40 hover:text-white;
+    @apply px-3 py-1 text-xs font-medium rounded-full bg-slate-900 text-slate-300 border border-slate-800 transition-all duration-300 hover:border-accent-cyan/40 hover:text-white;
   }
 
   /* Hide default Vite scrollbar just in case */
@@ -122,16 +118,18 @@
   position: absolute;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(0, 229, 255, 0.06) 0%, transparent 70%);
-  filter: blur(40px);
+  background: radial-gradient(circle, rgba(0, 229, 255, 0.04) 0%, transparent 65%);
   pointer-events: none;
+  transform: translateZ(0); /* Force GPU compositing layer */
+  will-change: transform;
 }
 
 .blur-spotlight-emerald {
   position: absolute;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.04) 0%, transparent 70%);
-  filter: blur(40px);
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.03) 0%, transparent 65%);
   pointer-events: none;
+  transform: translateZ(0); /* Force GPU compositing layer */
+  will-change: transform;
 }

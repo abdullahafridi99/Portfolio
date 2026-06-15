@@ -67,10 +67,31 @@ export default function Hero() {
       id="home"
       className="relative min-h-screen flex items-center justify-center pt-24 pb-16 overflow-hidden bg-grid-pattern"
     >
-      {/* Decorative Floating Blobs (pure CSS animation) */}
-      <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-accent-cyan/15 rounded-full filter blur-[80px] mix-blend-screen animate-blob-slow pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-indigo/15 rounded-full filter blur-[100px] mix-blend-screen animate-blob-slow [animation-delay:2s] pointer-events-none" />
-      <div className="absolute top-1/2 right-1/3 w-72 h-72 bg-accent-emerald/10 rounded-full filter blur-[70px] mix-blend-screen animate-blob-slow [animation-delay:4s] pointer-events-none" />
+      {/* Decorative Floating Blobs (optimized with hardware-accelerated radial gradients, no expensive CSS blur filters) */}
+      <div 
+        className="absolute top-1/4 left-1/4 w-80 h-80 rounded-full animate-blob-slow pointer-events-none" 
+        style={{
+          background: "radial-gradient(circle, rgba(0, 229, 255, 0.08) 0%, transparent 70%)",
+          willChange: "transform",
+          transform: "translateZ(0)"
+        }}
+      />
+      <div 
+        className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full animate-blob-slow [animation-delay:2s] pointer-events-none" 
+        style={{
+          background: "radial-gradient(circle, rgba(79, 70, 229, 0.08) 0%, transparent 70%)",
+          willChange: "transform",
+          transform: "translateZ(0)"
+        }}
+      />
+      <div 
+        className="absolute top-1/2 right-1/3 w-72 h-72 rounded-full animate-blob-slow [animation-delay:4s] pointer-events-none" 
+        style={{
+          background: "radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 70%)",
+          willChange: "transform",
+          transform: "translateZ(0)"
+        }}
+      />
 
       {/* Grid Overlay Spotlight */}
       <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-dark-950 pointer-events-none" />

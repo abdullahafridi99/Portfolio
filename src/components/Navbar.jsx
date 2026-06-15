@@ -17,15 +17,16 @@ export default function Navbar() {
 
   // Track scroll position to change background transparency
   useEffect(() => {
+    let scrolled = false;
     const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
+      const isOverThreshold = window.scrollY > 20;
+      if (isOverThreshold !== scrolled) {
+        scrolled = isOverThreshold;
+        setIsScrolled(isOverThreshold);
       }
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
