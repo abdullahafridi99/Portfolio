@@ -77,11 +77,24 @@ export default function Contact() {
     // If there are errors, stop
     if (Object.keys(formErrors).length > 0) return;
 
-    // Simulate form submission
+    // Real full-stack form submission
     setStatus("submitting");
     
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800)); // Simulated loading time
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to submit form.");
+      }
+
       setStatus("success");
       
       // Delighted success micro-interaction: Pop confetti!
@@ -102,6 +115,8 @@ export default function Contact() {
       }, 5000);
       
     } catch (err) {
+      console.error("Form submit error:", err);
+      alert(err.message || "Failed to submit message. Please try again.");
       setStatus("idle");
     }
   };

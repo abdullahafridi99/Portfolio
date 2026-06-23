@@ -1,19 +1,37 @@
 import React, { useState, useEffect, useRef } from "react";
-import { projectsData } from "../data/projectsData";
 import { ExternalLink } from "./Icons";
 import { Github } from "./BrandIcons";
 
 export default function Projects() {
   const [filter, setFilter] = useState("All");
   const [isVisible, setIsVisible] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
   const containerRef = useRef(null);
 
   // Popular filters selection
-  const popularFilters = ["All", "React", "Tailwind CSS", "Framer Motion", "Three.js"];
+  const popularFilters = ["All", "React", "Tailwind CSS", "Firebase", "Three.js"];
+
+  // Fetch projects from SQLite Backend
+  useEffect(() => {
+    fetch("/api/projects")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch projects");
+        return res.json();
+      })
+      .then((data) => {
+        setProjects(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error loading projects:", err);
+        setLoading(false);
+      });
+  }, []);
 
   const filteredProjects = filter === "All"
-    ? projectsData
-    : projectsData.filter(project => project.technologies.includes(filter));
+    ? projects
+    : projects.filter(project => project.technologies.includes(filter));
 
   // Native Intersection Observer to trigger entrance animation
   useEffect(() => {
@@ -32,7 +50,7 @@ export default function Projects() {
     }
 
     return () => observer.disconnect();
-  }, []);
+  }, [loading]); // Re-run observer after loading completes
 
   return (
     <section id="projects" className="py-24 bg-dark-950 relative overflow-hidden">
@@ -73,100 +91,113 @@ export default function Projects() {
           })}
         </div>
 
-        {/* Projects Grid with snappier CSS transitions */}
-        <div
-          ref={containerRef}
-          key={filter} // Forces clean CSS entry animation when filter criteria changes
-          className={`grid grid-cols-1 md:grid-cols-2 gap-8 transition-all duration-1000 ease-out transform ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          {filteredProjects.map((project) => (
-            <article
-              key={project.id}
-              className="group relative flex flex-col h-full rounded-3xl overflow-hidden glass-panel border-white/5 hover:border-accent-cyan/25 hover:-translate-y-1.5 transition-all duration-500 shadow-md hover:shadow-cyan-glow/5"
-            >
-              {/* Project Image Container */}
-              <div className="relative aspect-video w-full overflow-hidden border-b border-dark-700/40 bg-dark-950">
-                {/* Hover visual overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent opacity-60 z-10" />
-                <div className="absolute inset-0 bg-accent-cyan/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10 pointer-events-none" />
+        {/* Projects Grid Container */}
+        {loading ? (
+          <div className="flex justify-center items-center py-24 text-dark-500 font-light">
+            <div className="flex flex-col items-center gap-3">
+              <span className="w-8 h-8 rounded-full border-2 border-accent-cyan border-t-transparent animate-spin"></span>
+              <span className="text-sm tracking-wider uppercase font-semibold">Loading dynamic projects...</span>
+            </div>
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="text-center py-20 text-dark-500 font-light">
+            No projects found in the database.
+          </div>
+        ) : (
+          <div
+            ref={containerRef}
+            key={filter} // Forces clean CSS entry animation when filter criteria changes
+            className={`grid grid-cols-1 md:grid-cols-2 gap-8 transition-all duration-1000 ease-out transform ${
+              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+            }`}
+          >
+            {filteredProjects.map((project) => (
+              <article
+                key={project.id}
+                className="group relative flex flex-col h-full rounded-3xl overflow-hidden glass-panel border-white/5 hover:border-accent-cyan/25 hover:-translate-y-1.5 transition-all duration-500 shadow-md hover:shadow-cyan-glow/5"
+              >
+                {/* Project Image Container */}
+                <div className="relative aspect-video w-full overflow-hidden border-b border-dark-700/40 bg-dark-950">
+                  {/* Hover visual overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent opacity-60 z-10" />
+                  <div className="absolute inset-0 bg-accent-cyan/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10 pointer-events-none" />
 
-                <img
-                  src={project.image}
-                  alt={project.title}
-                  loading="lazy"
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                />
+                  <img
+                    src={project.image}
+                    alt={project.title}
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  />
 
-                {/* Quick view hover action */}
-                <div className="absolute top-4 right-4 flex gap-2.5 z-20">
-                  <a
-                    href={project.githubLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2.5 rounded-full bg-dark-950/80 backdrop-blur-sm border border-white/10 hover:border-accent-cyan hover:bg-accent-cyan hover:text-dark-950 text-slate-100 transition-all duration-300 shadow-lg"
-                    aria-label={`View code for ${project.title}`}
-                  >
-                    <Github size={18} />
-                  </a>
-                  <a
-                    href={project.liveLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2.5 rounded-full bg-dark-950/80 backdrop-blur-sm border border-white/10 hover:border-accent-cyan hover:bg-accent-cyan hover:text-dark-950 text-slate-100 transition-all duration-300 shadow-lg"
-                    aria-label={`View live site for ${project.title}`}
-                  >
-                    <ExternalLink size={18} />
-                  </a>
+                  {/* Quick view hover action */}
+                  <div className="absolute top-4 right-4 flex gap-2.5 z-20">
+                    <a
+                      href={project.githubLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2.5 rounded-full bg-dark-950/80 backdrop-blur-sm border border-white/10 hover:border-accent-cyan hover:bg-accent-cyan hover:text-dark-950 text-slate-100 transition-all duration-300 shadow-lg"
+                      aria-label={`View code for ${project.title}`}
+                    >
+                      <Github size={18} />
+                    </a>
+                    <a
+                      href={project.liveLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2.5 rounded-full bg-dark-950/80 backdrop-blur-sm border border-white/10 hover:border-accent-cyan hover:bg-accent-cyan hover:text-dark-950 text-slate-100 transition-all duration-300 shadow-lg"
+                      aria-label={`View live site for ${project.title}`}
+                    >
+                      <ExternalLink size={18} />
+                    </a>
+                  </div>
                 </div>
-              </div>
 
-              {/* Details Area */}
-              <div className="p-8 flex flex-col flex-grow">
-                {/* Tech stack badges */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {project.technologies.map((tech) => (
-                    <span key={tech} className="tech-badge">
-                      {tech}
-                    </span>
-                  ))}
+                {/* Details Area */}
+                <div className="p-8 flex flex-col flex-grow">
+                  {/* Tech stack badges */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {project.technologies.map((tech) => (
+                      <span key={tech} className="tech-badge">
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="text-xl font-bold text-slate-100 group-hover:text-accent-cyan transition-colors duration-300 mb-3 tracking-tight">
+                    {project.title}
+                  </h3>
+
+                  {/* Description */}
+                  <p className="text-dark-500 text-sm leading-relaxed mb-6 font-light flex-grow">
+                    {project.description}
+                  </p>
+
+                  {/* Card bottom footer link */}
+                  <div className="pt-4 border-t border-dark-700/40 flex items-center justify-between">
+                    <a
+                      href={project.liveLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-100 hover:text-accent-cyan transition-colors group/link"
+                    >
+                      Explore Project
+                      <ExternalLink size={12} className="group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
+                    </a>
+                    <a
+                      href={project.githubLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-dark-500 hover:text-slate-100 transition-colors"
+                    >
+                      Source Code
+                    </a>
+                  </div>
                 </div>
-
-                {/* Title */}
-                <h3 className="text-xl font-bold text-slate-100 group-hover:text-accent-cyan transition-colors duration-300 mb-3 tracking-tight">
-                  {project.title}
-                </h3>
-
-                {/* Description */}
-                <p className="text-dark-500 text-sm leading-relaxed mb-6 font-light flex-grow">
-                  {project.description}
-                </p>
-
-                {/* Card bottom footer link */}
-                <div className="pt-4 border-t border-dark-700/40 flex items-center justify-between">
-                  <a
-                    href={project.liveLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-100 hover:text-accent-cyan transition-colors group/link"
-                  >
-                    Explore Project
-                    <ExternalLink size={12} className="group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
-                  </a>
-                  <a
-                    href={project.githubLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-dark-500 hover:text-slate-100 transition-colors"
-                  >
-                    Source Code
-                  </a>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
+              </article>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

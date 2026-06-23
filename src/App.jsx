@@ -7,6 +7,7 @@ import Skills from "./components/Skills";
 import Projects from "./components/Projects";
 import Contact from "./components/Contact";
 import Footer from "./components/Footer";
+import AdminDashboard from "./components/AdminDashboard";
 
 // Layout wrapper for sections
 function HomeLayout() {
@@ -39,6 +40,8 @@ export default function App() {
       <Routes>
         {/* React Router DOM (v6+) integration */}
         <Route path="/" element={<HomeLayout />} />
+        {/* Register hidden Admin Dashboard */}
+        <Route path="/admin" element={<AdminDashboard />} />
         {/* Catch-all route mapping back to home */}
         <Route path="*" element={<HomeLayout />} />
       </Routes>
