@@ -9,10 +9,10 @@ import dotenv from "dotenv";
 import connectDB from "./database.js";
 import { User, Project, Message } from "./models.js";
 
-dotenv.config();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, ".env") });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -24,8 +24,14 @@ app.use(express.json());
 
 // Ensure MongoDB database is connected on every request (crucial for serverless routes)
 app.use(async (req, res, next) => {
-  await connectDB();
-  next();
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    res.status(503).json({
+      error: "Database offline. Please check your MONGODB_URI configuration in server/.env."
+    });
+  }
 });
 
 // JWT Auth Middleware
@@ -127,6 +133,78 @@ app.post("/api/auth/login", async (req, res) => {
 // Verify token validity
 app.get("/api/auth/verify", authenticateToken, (req, res) => {
   res.json({ valid: true, username: req.user.username });
+});
+
+// Reset password route (Requires Recovery Pin)
+app.post("/api/auth/reset-password", async (req, res) => {
+  const { username, recoveryPin, newPassword } = req.body;
+
+  if (!username || !recoveryPin || !newPassword) {
+    return res.status(400).json({ error: "All fields are required." });
+  }
+
+  const envRecoveryPin = process.env.RECOVERY_PIN || "admin-recovery-99";
+  if (recoveryPin.trim() !== envRecoveryPin.trim()) {
+    return res.status(401).json({ error: "Invalid recovery security pin." });
+  }
+
+  if (newPassword.trim().length < 6) {
+    return res.status(400).json({ error: "New password must be at least 6 characters." });
+  }
+
+  try {
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ error: "Admin user not found." });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    
+    user.passwordHash = hashedPassword;
+    await user.save();
+
+    res.json({ message: "Password reset successfully!" });
+  } catch (error) {
+    console.error("Password reset error:", error);
+    res.status(500).json({ error: "Failed to reset password." });
+  }
+});
+
+// Change password route (Authenticated)
+app.put("/api/admin/change-password", authenticateToken, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "Current and new password are required." });
+  }
+
+  if (newPassword.trim().length < 6) {
+    return res.status(400).json({ error: "New password must be at least 6 characters." });
+  }
+
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    const isValidPassword = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isValidPassword) {
+      return res.status(401).json({ error: "Incorrect current password." });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    user.passwordHash = hashedPassword;
+    await user.save();
+
+    res.json({ message: "Password updated successfully!" });
+  } catch (error) {
+    console.error("Change password error:", error);
+    res.status(500).json({ error: "Failed to change password." });
+  }
 });
 
 // ==========================================

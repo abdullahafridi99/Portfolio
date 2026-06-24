@@ -34,6 +34,14 @@ const Plus = ({ size = 18, className = "" }) => (
   </svg>
 );
 
+const Key = ({ size = 20, className = "" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="7.5" cy="15.5" r="5.5" />
+    <path d="m21 2-9.6 9.6" />
+    <path d="m15.5 7.5 3 3M18.5 4.5l3 3" />
+  </svg>
+);
+
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [token, setToken] = useState("");
@@ -44,6 +52,28 @@ export default function AdminDashboard() {
   const [loginCreds, setLoginCreds] = useState({ username: "", password: "" });
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
+
+  // Forgot Password / Password Reset State
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetCreds, setResetCreds] = useState({
+    username: "",
+    recoveryPin: "",
+    newPassword: "",
+    confirmNewPassword: ""
+  });
+  const [resetError, setResetError] = useState("");
+  const [resetSuccess, setResetSuccess] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+
+  // Change Password State
+  const [changeCreds, setChangeCreds] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmNewPassword: ""
+  });
+  const [changeError, setChangeError] = useState("");
+  const [changeSuccess, setChangeSuccess] = useState("");
+  const [changeLoading, setChangeLoading] = useState(false);
 
   // Dynamic Data Lists
   const [messages, setMessages] = useState([]);
@@ -154,6 +184,103 @@ export default function AdminDashboard() {
     setIsAuthenticated(false);
     setToken("");
     setUsername("");
+  };
+
+  const handleResetPasswordSubmit = async (e) => {
+    e.preventDefault();
+    setResetError("");
+    setResetSuccess("");
+
+    if (resetCreds.newPassword !== resetCreds.confirmNewPassword) {
+      setResetError("Passwords do not match.");
+      return;
+    }
+
+    if (resetCreds.newPassword.trim().length < 6) {
+      setResetError("New password must be at least 6 characters.");
+      return;
+    }
+
+    setResetLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: resetCreds.username,
+          recoveryPin: resetCreds.recoveryPin,
+          newPassword: resetCreds.newPassword
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Password reset failed.");
+      }
+
+      setResetSuccess("Password reset successfully! You can now log in.");
+      setResetCreds({
+        username: "",
+        recoveryPin: "",
+        newPassword: "",
+        confirmNewPassword: ""
+      });
+    } catch (err) {
+      setResetError(err.message);
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleChangePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setChangeError("");
+    setChangeSuccess("");
+
+    if (changeCreds.newPassword !== changeCreds.confirmNewPassword) {
+      setChangeError("Passwords do not match.");
+      return;
+    }
+
+    if (changeCreds.newPassword.trim().length < 6) {
+      setChangeError("New password must be at least 6 characters.");
+      return;
+    }
+
+    setChangeLoading(true);
+
+    try {
+      const res = await fetch("/api/admin/change-password", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword: changeCreds.currentPassword,
+          newPassword: changeCreds.newPassword
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to change password.");
+      }
+
+      setChangeSuccess("Password updated successfully!");
+      setChangeCreds({
+        currentPassword: "",
+        newPassword: "",
+        confirmNewPassword: ""
+      });
+    } catch (err) {
+      setChangeError(err.message);
+    } finally {
+      setChangeLoading(false);
+    }
   };
 
   // ==========================================
@@ -280,64 +407,198 @@ export default function AdminDashboard() {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-indigo/10 rounded-full filter blur-[100px] pointer-events-none" />
 
         <div className="w-full max-w-md glass-panel p-8 md:p-10 rounded-3xl border-white/5 relative z-10">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-extrabold tracking-tight text-white mb-2">Admin Dashboard</h2>
-            <p className="text-xs text-dark-500 font-light">Sign in to manage projects & view inquiries</p>
-          </div>
-
-          <form onSubmit={handleLoginSubmit} className="space-y-6">
-            {loginError && (
-              <div className="p-4 rounded-xl bg-red-950/30 border border-red-500/20 text-xs text-red-400 font-semibold">
-                {loginError}
+          {showForgotPassword ? (
+            <>
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-extrabold tracking-tight text-white mb-2">Reset Password</h2>
+                <p className="text-xs text-dark-500 font-light">Verify security pin to update admin credentials</p>
               </div>
-            )}
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Username</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  required
-                  placeholder="admin"
-                  value={loginCreds.username}
-                  onChange={(e) => setLoginCreds({ ...loginCreds, username: e.target.value })}
-                  className="w-full pl-11 pr-5 py-4 rounded-xl bg-dark-900 border border-dark-700/60 text-slate-100 placeholder-dark-500 font-light outline-none focus:border-accent-cyan/80 focus:ring-2 focus:ring-accent-cyan/10 transition-all duration-300"
-                />
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-500">
-                  <UserIcon size={18} />
+              <form onSubmit={handleResetPasswordSubmit} className="space-y-6">
+                {resetError && (
+                  <div className="p-4 rounded-xl bg-red-950/30 border border-red-500/20 text-xs text-red-400 font-semibold">
+                    {resetError}
+                  </div>
+                )}
+                {resetSuccess && (
+                  <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/20 text-xs text-emerald-400 font-semibold">
+                    {resetSuccess}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Username</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      placeholder="admin"
+                      value={resetCreds.username}
+                      onChange={(e) => setResetCreds({ ...resetCreds, username: e.target.value })}
+                      className="w-full pl-11 pr-5 py-4 rounded-xl bg-dark-900 border border-dark-700/60 text-slate-100 placeholder-dark-500 font-light outline-none focus:border-accent-cyan/80 focus:ring-2 focus:ring-accent-cyan/10 transition-all duration-300"
+                    />
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-500">
+                      <UserIcon size={18} />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Password</label>
-              <div className="relative">
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={loginCreds.password}
-                  onChange={(e) => setLoginCreds({ ...loginCreds, password: e.target.value })}
-                  className="w-full pl-11 pr-5 py-4 rounded-xl bg-dark-900 border border-dark-700/60 text-slate-100 placeholder-dark-500 font-light outline-none focus:border-accent-cyan/80 focus:ring-2 focus:ring-accent-cyan/10 transition-all duration-300"
-                />
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-500">
-                  <Lock size={18} />
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Recovery Pin</label>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={resetCreds.recoveryPin}
+                      onChange={(e) => setResetCreds({ ...resetCreds, recoveryPin: e.target.value })}
+                      className="w-full pl-11 pr-5 py-4 rounded-xl bg-dark-900 border border-dark-700/60 text-slate-100 placeholder-dark-500 font-light outline-none focus:border-accent-cyan/80 focus:ring-2 focus:ring-accent-cyan/10 transition-all duration-300"
+                    />
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-500">
+                      <Key size={18} />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={loginLoading}
-              className="w-full py-4 bg-gradient-to-r from-accent-cyan to-accent-indigo text-dark-950 font-bold rounded-xl hover:scale-[1.01] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 shadow-cyan-glow transition-all duration-300 flex items-center justify-center gap-2"
-            >
-              {loginLoading ? (
-                <span className="w-5 h-5 rounded-full border-2 border-dark-950 border-t-transparent animate-spin" />
-              ) : (
-                "Login Dashboard"
-              )}
-            </button>
-          </form>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">New Password</label>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={resetCreds.newPassword}
+                      onChange={(e) => setResetCreds({ ...resetCreds, newPassword: e.target.value })}
+                      className="w-full pl-11 pr-5 py-4 rounded-xl bg-dark-900 border border-dark-700/60 text-slate-100 placeholder-dark-500 font-light outline-none focus:border-accent-cyan/80 focus:ring-2 focus:ring-accent-cyan/10 transition-all duration-300"
+                    />
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-500">
+                      <Lock size={18} />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Confirm New Password</label>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={resetCreds.confirmNewPassword}
+                      onChange={(e) => setResetCreds({ ...resetCreds, confirmNewPassword: e.target.value })}
+                      className="w-full pl-11 pr-5 py-4 rounded-xl bg-dark-900 border border-dark-700/60 text-slate-100 placeholder-dark-500 font-light outline-none focus:border-accent-cyan/80 focus:ring-2 focus:ring-accent-cyan/10 transition-all duration-300"
+                    />
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-500">
+                      <Lock size={18} />
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="w-full py-4 bg-gradient-to-r from-accent-cyan to-accent-indigo text-dark-950 font-bold rounded-xl hover:scale-[1.01] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 shadow-cyan-glow transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  {resetLoading ? (
+                    <span className="w-5 h-5 rounded-full border-2 border-dark-950 border-t-transparent animate-spin" />
+                  ) : (
+                    "Reset Password"
+                  )}
+                </button>
+
+                <div className="text-center mt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setResetError("");
+                      setResetSuccess("");
+                      setLoginError("");
+                    }}
+                    className="text-xs text-accent-cyan hover:underline font-medium transition-all"
+                  >
+                    Back to Login
+                  </button>
+                </div>
+              </form>
+            </>
+          ) : (
+            <>
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-extrabold tracking-tight text-white mb-2">Admin Dashboard</h2>
+                <p className="text-xs text-dark-500 font-light">Sign in to manage projects & view inquiries</p>
+              </div>
+
+              <form onSubmit={handleLoginSubmit} className="space-y-6">
+                {loginError && (
+                  <div className="p-4 rounded-xl bg-red-950/30 border border-red-500/20 text-xs text-red-400 font-semibold">
+                    {loginError}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Username</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      placeholder="admin"
+                      value={loginCreds.username}
+                      onChange={(e) => setLoginCreds({ ...loginCreds, username: e.target.value })}
+                      className="w-full pl-11 pr-5 py-4 rounded-xl bg-dark-900 border border-dark-700/60 text-slate-100 placeholder-dark-500 font-light outline-none focus:border-accent-cyan/80 focus:ring-2 focus:ring-accent-cyan/10 transition-all duration-300"
+                    />
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-500">
+                      <UserIcon size={18} />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Password</label>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={loginCreds.password}
+                      onChange={(e) => setLoginCreds({ ...loginCreds, password: e.target.value })}
+                      className="w-full pl-11 pr-5 py-4 rounded-xl bg-dark-900 border border-dark-700/60 text-slate-100 placeholder-dark-500 font-light outline-none focus:border-accent-cyan/80 focus:ring-2 focus:ring-accent-cyan/10 transition-all duration-300"
+                    />
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-500">
+                      <Lock size={18} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgotPassword(true);
+                      setLoginError("");
+                      setResetError("");
+                      setResetSuccess("");
+                    }}
+                    className="text-xs text-accent-cyan hover:underline font-medium transition-all"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loginLoading}
+                  className="w-full py-4 bg-gradient-to-r from-accent-cyan to-accent-indigo text-dark-950 font-bold rounded-xl hover:scale-[1.01] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 shadow-cyan-glow transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  {loginLoading ? (
+                    <span className="w-5 h-5 rounded-full border-2 border-dark-950 border-t-transparent animate-spin" />
+                  ) : (
+                    "Login Dashboard"
+                  )}
+                </button>
+              </form>
+            </>
+          )}
         </div>
       </div>
     );
@@ -368,13 +629,18 @@ export default function AdminDashboard() {
         <div className="flex justify-start gap-4 mb-8">
           {[
             { id: "messages", label: "Messages" },
-            { id: "projects", label: "Projects CRUD" }
+            { id: "projects", label: "Projects CRUD" },
+            { id: "security", label: "Change Password" }
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => {
                 setIsEditingProject(false);
                 setActiveTab(tab.id);
+                // Clear state when switching tabs
+                setChangeError("");
+                setChangeSuccess("");
+                setChangeCreds({ currentPassword: "", newPassword: "", confirmNewPassword: "" });
               }}
               className={`px-6 py-3 rounded-xl text-xs uppercase font-bold tracking-wider transition-all duration-300 border ${
                 activeTab === tab.id
@@ -590,6 +856,94 @@ export default function AdminDashboard() {
                 </form>
               </div>
             )}
+          </div>
+        )}
+
+        {/* ==========================================
+            TAB VIEW: SECURITY (CHANGE PASSWORD)
+            ========================================== */}
+        {activeTab === "security" && (
+          <div className="glass-panel p-8 md:p-10 rounded-3xl border-white/5 max-w-md mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-extrabold tracking-tight text-white mb-2">Change Password</h2>
+              <p className="text-xs text-dark-500 font-light">Update your current admin credentials</p>
+            </div>
+
+            <form onSubmit={handleChangePasswordSubmit} className="space-y-6">
+              {changeError && (
+                <div className="p-4 rounded-xl bg-red-950/30 border border-red-500/20 text-xs text-red-400 font-semibold">
+                  {changeError}
+                </div>
+              )}
+              {changeSuccess && (
+                <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/20 text-xs text-emerald-400 font-semibold">
+                  {changeSuccess}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Current Password</label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={changeCreds.currentPassword}
+                    onChange={(e) => setChangeCreds({ ...changeCreds, currentPassword: e.target.value })}
+                    className="w-full pl-11 pr-5 py-4 rounded-xl bg-dark-900 border border-dark-700/60 text-slate-100 placeholder-dark-500 font-light outline-none focus:border-accent-cyan/80 focus:ring-2 focus:ring-accent-cyan/10 transition-all duration-300"
+                  />
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-500">
+                    <Lock size={18} />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">New Password</label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={changeCreds.newPassword}
+                    onChange={(e) => setChangeCreds({ ...changeCreds, newPassword: e.target.value })}
+                    className="w-full pl-11 pr-5 py-4 rounded-xl bg-dark-900 border border-dark-700/60 text-slate-100 placeholder-dark-500 font-light outline-none focus:border-accent-cyan/80 focus:ring-2 focus:ring-accent-cyan/10 transition-all duration-300"
+                  />
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-500">
+                    <Lock size={18} />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Confirm New Password</label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={changeCreds.confirmNewPassword}
+                    onChange={(e) => setChangeCreds({ ...changeCreds, confirmNewPassword: e.target.value })}
+                    className="w-full pl-11 pr-5 py-4 rounded-xl bg-dark-900 border border-dark-700/60 text-slate-100 placeholder-dark-500 font-light outline-none focus:border-accent-cyan/80 focus:ring-2 focus:ring-accent-cyan/10 transition-all duration-300"
+                  />
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-dark-500">
+                    <Lock size={18} />
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={changeLoading}
+                className="w-full py-4 bg-gradient-to-r from-accent-cyan to-accent-indigo text-dark-950 font-bold rounded-xl hover:scale-[1.01] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 shadow-cyan-glow transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                {changeLoading ? (
+                  <span className="w-5 h-5 rounded-full border-2 border-dark-950 border-t-transparent animate-spin" />
+                ) : (
+                  "Change Password"
+                )}
+              </button>
+            </form>
           </div>
         )}
 
