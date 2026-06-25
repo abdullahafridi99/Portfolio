@@ -12,6 +12,16 @@ const ProjectSchema = new mongoose.Schema({
   technologies: { type: [String], required: true },
   liveLink: { type: String, required: true },
   githubLink: { type: String, required: true }
+}, {
+  toJSON: {
+    virtuals: true,
+    transform: (doc, ret) => {
+      ret.id = ret._id.toString();
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    }
+  }
 });
 
 const MessageSchema = new mongoose.Schema({
@@ -20,6 +30,17 @@ const MessageSchema = new mongoose.Schema({
   subject: { type: String, required: true },
   message: { type: String, required: true },
   createdAt: { type: Date, default: Date.now }
+}, {
+  toJSON: {
+    virtuals: true,
+    transform: (doc, ret) => {
+      ret.id = ret._id.toString();
+      ret.created_at = ret.createdAt;
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    }
+  }
 });
 
 // Avoid OverwriteModelError in serverless environments by checking model existence first

@@ -396,6 +396,25 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleImageFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File is too large. Please select an image under 5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      setProjectForm((prev) => ({
+        ...prev,
+        image: uploadEvent.target.result
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   // ==========================================
   // LOGIN SCREEN
   // ==========================================
@@ -799,15 +818,46 @@ export default function AdminDashboard() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Thumbnail Image URL</label>
-                    <input
-                      type="url"
-                      required
-                      placeholder="https://images.unsplash.com/..."
-                      value={projectForm.image}
-                      onChange={(e) => setProjectForm({ ...projectForm, image: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl bg-dark-900 border border-dark-700/60 text-slate-100 outline-none focus:border-accent-cyan/80 focus:ring-1 focus:ring-accent-cyan/20 transition-all duration-300"
-                    />
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Project Thumbnail</label>
+                    
+                    <div className="flex flex-col sm:flex-row gap-4 items-center p-4 rounded-xl bg-dark-900 border border-dark-700/60">
+                      {projectForm.image ? (
+                        <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-dark-700/40 bg-dark-950 flex-shrink-0">
+                          <img
+                            src={projectForm.image}
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-24 h-24 rounded-lg border border-dashed border-dark-700/60 bg-dark-950/40 flex items-center justify-center flex-shrink-0 text-dark-500 text-xs">
+                          No Image
+                        </div>
+                      )}
+                      
+                      <div className="flex-1 text-center sm:text-left">
+                        <label
+                          htmlFor="project-image-file"
+                          className="inline-flex items-center gap-2 px-4 py-2.5 bg-dark-800 border border-dark-700/60 hover:border-accent-cyan text-xs font-semibold text-slate-200 hover:text-accent-cyan rounded-xl cursor-pointer transition-all duration-300"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" x2="12" y1="3" y2="15" />
+                          </svg>
+                          {projectForm.image ? "Change Image" : "Upload Image"}
+                        </label>
+                        <input
+                          type="file"
+                          id="project-image-file"
+                          accept="image/*"
+                          onChange={handleImageFileChange}
+                          className="hidden"
+                          required={!projectForm.image}
+                        />
+                        <p className="text-[10px] text-dark-500 mt-2">Supports JPG, PNG, GIF, WebP (Max 5MB)</p>
+                      </div>
+                    </div>
                   </div>
 
                   <div>
