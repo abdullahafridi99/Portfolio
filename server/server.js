@@ -30,7 +30,7 @@ app.use(async (req, res, next) => {
     next();
   } catch (error) {
     res.status(503).json({
-      error: "Database offline. Please check your MONGODB_URI configuration in server/.env."
+      error: `Database offline: ${error.message}`
     });
   }
 });
