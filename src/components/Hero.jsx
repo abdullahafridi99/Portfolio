@@ -3,7 +3,7 @@ import { ArrowRight, Download, Mail } from "./Icons";
 import { Github, Linkedin, Twitter } from "./BrandIcons";
 import { smoothScrollTo } from "../utils/scroll";
 
-const titles = ["Frontend Engineer", "UI Developer", "React Developer", "Creative Coder"];
+const titles = ["MERN Stack Developer", "Full Stack Engineer", "React & Node Developer", "MongoDB Expert"];
 
 export default function Hero() {
   const [titleIndex, setTitleIndex] = useState(0);

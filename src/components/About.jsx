@@ -58,7 +58,7 @@ export default function About() {
             </h3>
             
             <p className="text-dark-500 leading-relaxed mb-6 font-light">
-              Hi, I'm <strong className="text-white font-medium">Muhammad Abdullah</strong>, a passionate Frontend Engineer and UI/UX Designer based in Pakistan. I specialize in building sleek, high-performance, and visually spectacular web applications.
+              Hi, I'm <strong className="text-white font-medium">Muhammad Abdullah</strong>, a passionate MERN Stack Developer based in Pakistan. I specialize in building sleek, high-performance, and visually spectacular full-stack web applications.
             </p>
             <p className="text-dark-500 leading-relaxed mb-6 font-light">
               My core focus lies at the intersection of pixel-perfect design and clean, scalable code. I believe websites should not only function flawlessly but also deliver emotional experiences through smooth micro-interactions, responsive sizing, and vibrant style hierarchies.
@@ -128,7 +128,7 @@ export default function About() {
               <div className="relative pl-10 flex flex-col md:flex-row md:justify-between md:items-start gap-2">
                 <div className="absolute left-[9px] top-1.5 w-[17px] h-[17px] rounded-full bg-accent-cyan border-4 border-dark-950 shadow-cyan-glow" />
                 <div>
-                  <h4 className="font-bold text-slate-100 text-base">Frontend Developer</h4>
+                   <h4 className="font-bold text-slate-100 text-base">MERN Stack Developer</h4>
                   <span className="text-xs text-dark-500">Freelance / Contract</span>
                 </div>
                 <div className="inline-flex px-3 py-1 rounded-full bg-dark-900 border border-dark-700 text-xs text-accent-cyan font-medium leading-none self-start md:self-auto">
