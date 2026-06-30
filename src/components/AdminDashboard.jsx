@@ -75,6 +75,12 @@ export default function AdminDashboard() {
   const [changeSuccess, setChangeSuccess] = useState("");
   const [changeLoading, setChangeLoading] = useState(false);
 
+  // Profile Picture State
+  const [profilePic, setProfilePic] = useState("");
+  const [profileSuccess, setProfileSuccess] = useState("");
+  const [profileError, setProfileError] = useState("");
+  const [profileLoading, setProfileLoading] = useState(false);
+
   // Dynamic Data Lists
   const [messages, setMessages] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -116,6 +122,16 @@ export default function AdminDashboard() {
     }
     // Scroll to top
     smoothScrollTo(0, 100);
+  }, []);
+
+  // Load profile picture on mount
+  useEffect(() => {
+    fetch("/api/profile")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.profilePic) setProfilePic(data.profilePic);
+      })
+      .catch((err) => console.error("Error loading profile picture:", err));
   }, []);
 
   // Fetch admin items once authenticated
@@ -281,6 +297,58 @@ export default function AdminDashboard() {
     } finally {
       setChangeLoading(false);
     }
+  };
+
+  const handleProfileSubmit = async (e) => {
+    e.preventDefault();
+    setProfileError("");
+    setProfileSuccess("");
+
+    if (!profilePic) {
+      setProfileError("Please select a profile picture first.");
+      return;
+    }
+
+    setProfileLoading(true);
+
+    try {
+      const res = await fetch("/api/admin/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ profilePic })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update profile picture.");
+      }
+
+      setProfileSuccess("Profile picture updated successfully!");
+    } catch (err) {
+      setProfileError(err.message);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const handleProfilePicChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File is too large. Please select an image under 5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      setProfilePic(uploadEvent.target.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   // ==========================================
@@ -645,10 +713,11 @@ export default function AdminDashboard() {
         </div>
 
         {/* Tab Controls */}
-        <div className="flex justify-start gap-4 mb-8">
+        <div className="flex justify-start gap-4 mb-8 flex-wrap">
           {[
             { id: "messages", label: "Messages" },
             { id: "projects", label: "Projects CRUD" },
+            { id: "profile", label: "Manage Profile" },
             { id: "security", label: "Change Password" }
           ].map((tab) => (
             <button
@@ -660,6 +729,8 @@ export default function AdminDashboard() {
                 setChangeError("");
                 setChangeSuccess("");
                 setChangeCreds({ currentPassword: "", newPassword: "", confirmNewPassword: "" });
+                setProfileError("");
+                setProfileSuccess("");
               }}
               className={`px-6 py-3 rounded-xl text-xs uppercase font-bold tracking-wider transition-all duration-300 border ${
                 activeTab === tab.id
@@ -991,6 +1062,85 @@ export default function AdminDashboard() {
                   <span className="w-5 h-5 rounded-full border-2 border-dark-950 border-t-transparent animate-spin" />
                 ) : (
                   "Change Password"
+                )}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* ==========================================
+            TAB VIEW: MANAGE PROFILE
+            ========================================== */}
+        {activeTab === "profile" && (
+          <div className="glass-panel p-8 md:p-10 rounded-3xl border-white/5 max-w-md mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-extrabold tracking-tight text-white mb-2">Manage Profile</h2>
+              <p className="text-xs text-dark-500 font-light">Set up or change your profile picture</p>
+            </div>
+
+            <form onSubmit={handleProfileSubmit} className="space-y-6">
+              {profileError && (
+                <div className="p-4 rounded-xl bg-red-950/30 border border-red-500/20 text-xs text-red-400 font-semibold">
+                  {profileError}
+                </div>
+              )}
+              {profileSuccess && (
+                <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/20 text-xs text-emerald-400 font-semibold">
+                  {profileSuccess}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Profile Picture</label>
+                
+                <div className="flex flex-col items-center gap-6 p-6 rounded-2xl bg-dark-900 border border-dark-700/60">
+                  <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-dark-700/60 bg-dark-950 flex-shrink-0 flex items-center justify-center">
+                    {profilePic ? (
+                      <img
+                        src={profilePic}
+                        alt="Profile Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-16 h-16 text-dark-500">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    )}
+                  </div>
+                  
+                  <div className="w-full text-center">
+                    <label
+                      htmlFor="profile-pic-file"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-dark-800 border border-dark-700/60 hover:border-accent-cyan text-xs font-semibold text-slate-200 hover:text-accent-cyan rounded-xl cursor-pointer transition-all duration-300"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" x2="12" y1="3" y2="15" />
+                      </svg>
+                      {profilePic ? "Change Photo" : "Upload Photo"}
+                    </label>
+                    <input
+                      type="file"
+                      id="profile-pic-file"
+                      accept="image/*"
+                      onChange={handleProfilePicChange}
+                      className="hidden"
+                    />
+                    <p className="text-[10px] text-dark-500 mt-2">Supports JPG, PNG, GIF, WebP (Max 5MB)</p>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={profileLoading}
+                className="w-full py-4 bg-gradient-to-r from-accent-cyan to-accent-indigo text-dark-950 font-bold rounded-xl hover:scale-[1.01] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 shadow-cyan-glow transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                {profileLoading ? (
+                  <span className="w-5 h-5 rounded-full border-2 border-dark-950 border-t-transparent animate-spin" />
+                ) : (
+                  "Save Profile Picture"
                 )}
               </button>
             </form>

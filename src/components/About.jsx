@@ -4,6 +4,17 @@ import { Briefcase, Award, Compass, Code } from "./Icons";
 export default function About() {
   const [isVisible, setIsVisible] = useState(false);
   const gridRef = useRef(null);
+  const [profilePic, setProfilePic] = useState("");
+
+  // Fetch profile picture on mount
+  useEffect(() => {
+    fetch("/api/profile")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.profilePic) setProfilePic(data.profilePic);
+      })
+      .catch((err) => console.error("Error loading profile:", err));
+  }, []);
 
   // Native Intersection Observer to fade up content on scroll
   useEffect(() => {
@@ -57,15 +68,30 @@ export default function About() {
               <Code className="text-accent-cyan" /> Who I Am
             </h3>
             
-            <p className="text-dark-500 leading-relaxed mb-6 font-light">
-              Hi, I'm <strong className="text-white font-medium">Muhammad Abdullah</strong>, a passionate MERN Stack Developer based in Pakistan. I specialize in building sleek, high-performance, and visually spectacular full-stack web applications.
-            </p>
-            <p className="text-dark-500 leading-relaxed mb-6 font-light">
-              My core focus lies at the intersection of pixel-perfect design and clean, scalable code. I believe websites should not only function flawlessly but also deliver emotional experiences through smooth micro-interactions, responsive sizing, and vibrant style hierarchies.
-            </p>
-            <p className="text-dark-500 leading-relaxed font-light">
-              Whether coding custom component ecosystems in React, refining grid-aligned flex containers, or configuring delicate transition curves, I strive for excellence in every project.
-            </p>
+            <div className="flex flex-col sm:flex-row gap-6 md:gap-8 items-center sm:items-start">
+              {profilePic && (
+                <div className="relative w-32 h-32 md:w-36 md:h-36 rounded-2xl overflow-hidden border border-white/10 group-hover:border-accent-cyan/25 flex-shrink-0 transition-all duration-500 shadow-lg bg-dark-900">
+                  <img
+                    src={profilePic}
+                    alt="Muhammad Abdullah"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-102"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-dark-950/20 via-transparent to-transparent pointer-events-none" />
+                </div>
+              )}
+              
+              <div className="flex-1">
+                <p className="text-dark-500 leading-relaxed mb-6 font-light text-center sm:text-left">
+                  Hi, I'm <strong className="text-white font-medium">Muhammad Abdullah</strong>, a passionate MERN Stack Developer based in Pakistan. I specialize in building sleek, high-performance, and visually spectacular full-stack web applications.
+                </p>
+                <p className="text-dark-500 leading-relaxed mb-6 font-light text-center sm:text-left">
+                  My core focus lies at the intersection of pixel-perfect design and clean, scalable code. I believe websites should not only function flawlessly but also deliver emotional experiences through smooth micro-interactions, responsive sizing, and vibrant style hierarchies.
+                </p>
+                <p className="text-dark-500 leading-relaxed font-light text-center sm:text-left">
+                  Whether coding custom component ecosystems in React, refining grid-aligned flex containers, or configuring delicate transition curves, I strive for excellence in every project.
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Quick Metrics Card */}

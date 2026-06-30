@@ -10,10 +10,21 @@ export default function Hero() {
   const [displayText, setDisplayText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [profilePic, setProfilePic] = useState("");
 
   // Trigger CSS fade-in transition on mount
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // Fetch profile picture on mount
+  useEffect(() => {
+    fetch("/api/profile")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.profilePic) setProfilePic(data.profilePic);
+      })
+      .catch((err) => console.error("Error loading profile:", err));
   }, []);
 
   // Typewriter effect logic
@@ -102,6 +113,23 @@ export default function Hero() {
           mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
         }`}
       >
+        {/* Profile Avatar */}
+        <div className="relative w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-2 border-accent-cyan/25 shadow-cyan-glow/5 mb-6 group transition-all duration-500 hover:border-accent-cyan/60 flex items-center justify-center flex-shrink-0 bg-dark-900">
+          {profilePic ? (
+            <img
+              src={profilePic}
+              alt="Muhammad Abdullah"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-14 h-14 text-dark-500">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          )}
+          {/* Glowing background ring */}
+          <div className="absolute inset-0 rounded-full border border-white/5 pointer-events-none" />
+        </div>
+
         {/* Intro Tag */}
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-panel-light border border-white/5 mb-6 shadow-sm">
           <span className="flex h-2 w-2 relative">

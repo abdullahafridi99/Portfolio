@@ -94,6 +94,20 @@ app.post("/api/contact", async (req, res) => {
   }
 });
 
+// 3. Get profile picture & username
+app.get("/api/profile", async (req, res) => {
+  try {
+    const user = await User.findOne().sort({ _id: 1 });
+    res.json({
+      username: user ? user.username : "admin",
+      profilePic: user ? user.profilePic : ""
+    });
+  } catch (error) {
+    console.error("Fetch profile error:", error);
+    res.status(500).json({ error: "Failed to retrieve profile." });
+  }
+});
+
 // ==========================================
 // ADMIN AUTHENTICATION
 // ==========================================
@@ -205,6 +219,26 @@ app.put("/api/admin/change-password", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error("Change password error:", error);
     res.status(500).json({ error: "Failed to change password." });
+  }
+});
+
+// Change profile picture route (Authenticated)
+app.put("/api/admin/profile", authenticateToken, async (req, res) => {
+  const { profilePic } = req.body;
+
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    user.profilePic = profilePic;
+    await user.save();
+
+    res.json({ message: "Profile picture updated successfully!", profilePic: user.profilePic });
+  } catch (error) {
+    console.error("Update profile picture error:", error);
+    res.status(500).json({ error: "Failed to update profile picture." });
   }
 });
 
