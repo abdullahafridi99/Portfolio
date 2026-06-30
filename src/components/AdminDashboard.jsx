@@ -81,6 +81,13 @@ export default function AdminDashboard() {
   const [profileError, setProfileError] = useState("");
   const [profileLoading, setProfileLoading] = useState(false);
 
+  // Profile Editor States (Crop & Adjust)
+  const [rawImage, setRawImage] = useState(null);
+  const [editorZoom, setEditorZoom] = useState(1);
+  const [editorRotation, setEditorRotation] = useState(0);
+  const [editorPanX, setEditorPanX] = useState(0);
+  const [editorPanY, setEditorPanY] = useState(0);
+
   // Dynamic Data Lists
   const [messages, setMessages] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -286,12 +293,15 @@ export default function AdminDashboard() {
         throw new Error(data.error || "Failed to change password.");
       }
 
-      setChangeSuccess("Password updated successfully!");
+      setChangeSuccess("Password updated successfully! Logging out in 2 seconds...");
       setChangeCreds({
         currentPassword: "",
         newPassword: "",
         confirmNewPassword: ""
       });
+      setTimeout(() => {
+        handleLogout();
+      }, 2000);
     } catch (err) {
       setChangeError(err.message);
     } finally {
@@ -346,9 +356,56 @@ export default function AdminDashboard() {
 
     const reader = new FileReader();
     reader.onload = (uploadEvent) => {
-      setProfilePic(uploadEvent.target.result);
+      setRawImage(uploadEvent.target.result);
+      setEditorZoom(1.0);
+      setEditorRotation(0);
+      setEditorPanX(0);
+      setEditorPanY(0);
     };
     reader.readAsDataURL(file);
+  };
+
+  const applyImageAdjustments = () => {
+    if (!rawImage) return;
+
+    const img = new Image();
+    img.src = rawImage;
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const size = 400; // Standard cropped size
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+
+      // 1. Clear background
+      ctx.clearRect(0, 0, size, size);
+
+      // 2. Center coordinate system for rotation & zoom scaling
+      ctx.translate(size / 2, size / 2);
+      ctx.rotate((editorRotation * Math.PI) / 180);
+      ctx.scale(editorZoom, editorZoom);
+
+      // 3. Keep image aspect ratio
+      let drawWidth = size;
+      let drawHeight = size;
+      const imgRatio = img.width / img.height;
+      if (imgRatio > 1) {
+        drawHeight = size / imgRatio;
+      } else {
+        drawWidth = size * imgRatio;
+      }
+
+      // 4. Translate by editor pan coordinates
+      ctx.translate(editorPanX, editorPanY);
+
+      // 5. Draw image centered
+      ctx.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+
+      // 6. Get output URL
+      const finalBase64 = canvas.toDataURL("image/jpeg", 0.9);
+      setProfilePic(finalBase64);
+      setRawImage(null); // Return to preview mode
+    };
   };
 
   // ==========================================
@@ -704,12 +761,24 @@ export default function AdminDashboard() {
             <h1 className="text-3xl md:text-4xl font-black text-white">Admin Control Center</h1>
             <p className="text-xs text-dark-500 font-light mt-1">Logged in as <strong className="text-accent-cyan">{username}</strong></p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="self-start md:self-auto px-4 py-2 border border-red-500/20 text-xs font-bold rounded-lg hover:bg-red-500/10 text-red-400 transition-colors"
-          >
-            Logout
-          </button>
+          <div className="flex gap-3 self-start md:self-auto">
+            <a
+              href="/"
+              className="px-4 py-2 bg-dark-900 border border-dark-700/60 text-xs font-bold rounded-lg text-slate-300 hover:text-white hover:border-slate-500 transition-all flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m 3,9 9,-7 9,7 v 11 a 2,2 0 0 1 -2,2 H 5 a 2,2 0 0 1 -2,-2 z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+              </svg>
+              Back to Portfolio
+            </a>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 border border-red-500/20 text-xs font-bold rounded-lg hover:bg-red-500/10 text-red-400 transition-colors"
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
         {/* Tab Controls */}
@@ -1090,47 +1159,156 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Profile Picture</label>
-                
-                <div className="flex flex-col items-center gap-6 p-6 rounded-2xl bg-dark-900 border border-dark-700/60">
-                  <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-dark-700/60 bg-dark-950 flex-shrink-0 flex items-center justify-center">
-                    {profilePic ? (
-                      <img
-                        src={profilePic}
-                        alt="Profile Preview"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-16 h-16 text-dark-500">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    )}
-                  </div>
+              {rawImage ? (
+                <div className="space-y-6 p-6 rounded-2xl bg-dark-900 border border-dark-700/60">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 text-center">Adjust & Crop Picture</label>
                   
-                  <div className="w-full text-center">
-                    <label
-                      htmlFor="profile-pic-file"
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-dark-800 border border-dark-700/60 hover:border-accent-cyan text-xs font-semibold text-slate-200 hover:text-accent-cyan rounded-xl cursor-pointer transition-all duration-300"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="17 8 12 3 7 8" />
-                        <line x1="12" x2="12" y1="3" y2="15" />
-                      </svg>
-                      {profilePic ? "Change Photo" : "Upload Photo"}
-                    </label>
-                    <input
-                      type="file"
-                      id="profile-pic-file"
-                      accept="image/*"
-                      onChange={handleProfilePicChange}
-                      className="hidden"
+                  {/* Circular preview frame */}
+                  <div className="relative w-48 h-48 rounded-full overflow-hidden border-2 border-accent-cyan/40 bg-dark-950 flex items-center justify-center mx-auto shadow-inner">
+                    <img
+                      src={rawImage}
+                      alt="Cropper Preview"
+                      style={{
+                        transform: `scale(${editorZoom}) rotate(${editorRotation}deg) translate(${editorPanX}px, ${editorPanY}px)`,
+                        transition: 'transform 0.1s ease-out',
+                        maxWidth: '100%',
+                        maxHeight: '100%',
+                        objectFit: 'contain'
+                      }}
                     />
-                    <p className="text-[10px] text-dark-500 mt-2">Supports JPG, PNG, GIF, WebP (Max 5MB)</p>
+                  </div>
+
+                  {/* Sliders */}
+                  <div className="space-y-4">
+                    {/* Zoom */}
+                    <div>
+                      <div className="flex justify-between text-xs text-dark-500 mb-1">
+                        <span>Zoom</span>
+                        <span>{editorZoom.toFixed(2)}x</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0.8"
+                        max="3.0"
+                        step="0.05"
+                        value={editorZoom}
+                        onChange={(e) => setEditorZoom(parseFloat(e.target.value))}
+                        className="w-full h-1.5 bg-dark-950 rounded-lg appearance-none cursor-pointer accent-accent-cyan"
+                      />
+                    </div>
+
+                    {/* Rotation */}
+                    <div>
+                      <div className="flex justify-between text-xs text-dark-500 mb-1">
+                        <span>Rotation</span>
+                        <span>{editorRotation}°</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="360"
+                        step="90"
+                        value={editorRotation}
+                        onChange={(e) => setEditorRotation(parseInt(e.target.value))}
+                        className="w-full h-1.5 bg-dark-950 rounded-lg appearance-none cursor-pointer accent-accent-cyan"
+                      />
+                    </div>
+
+                    {/* Pan X */}
+                    <div>
+                      <div className="flex justify-between text-xs text-dark-500 mb-1">
+                        <span>Pan Horizontal</span>
+                        <span>{editorPanX}px</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="-150"
+                        max="150"
+                        step="1"
+                        value={editorPanX}
+                        onChange={(e) => setEditorPanX(parseInt(e.target.value))}
+                        className="w-full h-1.5 bg-dark-950 rounded-lg appearance-none cursor-pointer accent-accent-cyan"
+                      />
+                    </div>
+
+                    {/* Pan Y */}
+                    <div>
+                      <div className="flex justify-between text-xs text-dark-500 mb-1">
+                        <span>Pan Vertical</span>
+                        <span>{editorPanY}px</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="-150"
+                        max="150"
+                        step="1"
+                        value={editorPanY}
+                        onChange={(e) => setEditorPanY(parseInt(e.target.value))}
+                        className="w-full h-1.5 bg-dark-950 rounded-lg appearance-none cursor-pointer accent-accent-cyan"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setRawImage(null)}
+                      className="flex-1 py-2.5 border border-dark-700 bg-dark-800 text-xs font-semibold text-slate-300 rounded-xl hover:bg-dark-900 transition-all duration-300"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={applyImageAdjustments}
+                      className="flex-1 py-2.5 bg-accent-cyan text-dark-950 text-xs font-bold rounded-xl hover:scale-[1.02] shadow-cyan-glow transition-all duration-300"
+                    >
+                      Apply Crop
+                    </button>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Profile Picture</label>
+                  
+                  <div className="flex flex-col items-center gap-6 p-6 rounded-2xl bg-dark-900 border border-dark-700/60">
+                    <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-dark-700/60 bg-dark-950 flex-shrink-0 flex items-center justify-center">
+                      {profilePic ? (
+                        <img
+                          src={profilePic}
+                          alt="Profile Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-16 h-16 text-dark-500">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      )}
+                    </div>
+                    
+                    <div className="w-full text-center">
+                      <label
+                        htmlFor="profile-pic-file"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-dark-800 border border-dark-700/60 hover:border-accent-cyan text-xs font-semibold text-slate-200 hover:text-accent-cyan rounded-xl cursor-pointer transition-all duration-300"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="17 8 12 3 7 8" />
+                          <line x1="12" x2="12" y1="3" y2="15" />
+                        </svg>
+                        {profilePic ? "Change Photo" : "Upload Photo"}
+                      </label>
+                      <input
+                        type="file"
+                        id="profile-pic-file"
+                        accept="image/*"
+                        onChange={handleProfilePicChange}
+                        className="hidden"
+                      />
+                      <p className="text-[10px] text-dark-500 mt-2">Supports JPG, PNG, GIF, WebP (Max 5MB)</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <button
                 type="submit"
