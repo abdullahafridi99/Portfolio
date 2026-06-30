@@ -109,92 +109,100 @@ export default function Hero() {
 
       {/*snappy CSS fade-up container */}
       <div
-        className={`max-w-7xl mx-auto px-6 md:px-12 relative z-10 text-center flex flex-col items-center transition-all duration-1000 ease-out transform ${
+        className={`max-w-7xl mx-auto px-6 md:px-12 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center text-left transition-all duration-1000 ease-out transform ${
           mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
         }`}
       >
-        {/* Profile Avatar */}
-        <div className="relative w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-2 border-accent-cyan/25 shadow-cyan-glow/5 mb-6 group transition-all duration-500 hover:border-accent-cyan/60 flex items-center justify-center flex-shrink-0 bg-dark-900">
-          {profilePic ? (
-            <img
-              src={profilePic}
-              alt="Muhammad Abdullah"
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-14 h-14 text-dark-500">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-          )}
-          {/* Glowing background ring */}
-          <div className="absolute inset-0 rounded-full border border-white/5 pointer-events-none" />
-        </div>
-
-        {/* Intro Tag */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-panel-light border border-white/5 mb-6 shadow-sm">
-          <span className="flex h-2 w-2 relative">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-cyan opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-cyan"></span>
-          </span>
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-            Available for Freelance & Full-time Roles
-          </span>
-        </div>
-
-        {/* High-Impact Typography Heading */}
-        <h1 className="text-5xl md:text-8xl font-black tracking-tight mb-6 leading-[1.05]" id="hero-title">
-          <span className="block text-slate-100">Muhammad</span>
-          <span className="block text-glow-cyan">Abdullah</span>
-        </h1>
-
-        {/* Dynamic Typewritten Subtitle */}
-        <div className="h-10 mb-10 flex items-center justify-center">
-          <p className="text-xl md:text-3xl font-light text-dark-500 tracking-wide">
-            I'm a{" "}
-            <span className="font-semibold text-white border-r-2 border-accent-cyan pr-1.5 animate-pulse">
-              {displayText}
+        {/* Left Column - Content (spans 7 cols on lg) */}
+        <div className="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left order-2 lg:order-1">
+          {/* Intro Tag */}
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-panel-light border border-white/5 mb-6 shadow-sm">
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-cyan opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-cyan"></span>
             </span>
-          </p>
-        </div>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+              Available for Freelance & Full-time Roles
+            </span>
+          </div>
 
-        {/* Action Buttons (CTAs) */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16" id="hero-ctas">
-          <a
-            href="#projects"
-            onClick={(e) => handleCtaClick(e, "#projects")}
-            className="group relative flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-accent-cyan to-accent-indigo text-dark-950 font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] shadow-cyan-glow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-accent-cyan/50"
-          >
-            View My Projects
-            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform duration-300" />
-          </a>
-          <a
-            href="#contact"
-            onClick={(e) => handleCtaClick(e, "#contact")}
-            className="flex items-center justify-center gap-2 px-8 py-4 border border-dark-700 hover:border-slate-300 bg-dark-900/50 hover:bg-dark-900 text-slate-100 font-semibold rounded-xl transition-all duration-300 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-slate-300/30"
-          >
-            Let's Talk
-          </a>
-        </div>
+          {/* High-Impact Typography Heading */}
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-6 leading-[1.05]" id="hero-title">
+            <span className="block text-slate-100">Muhammad</span>
+            <span className="block text-glow-cyan">Abdullah</span>
+          </h1>
 
-        {/* Social Quick Links */}
-        <div className="flex gap-6 justify-center items-center">
-          {[
-            { Icon: Github, href: "https://github.com", label: "GitHub" },
-            { Icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
-            { Icon: Twitter, href: "https://twitter.com", label: "Twitter" },
-            { Icon: Mail, href: "mailto:abdullahafridi12390@gmail.com", label: "Email" }
-          ].map((social, index) => (
+          {/* Dynamic Typewritten Subtitle */}
+          <div className="h-10 mb-10 flex items-center justify-center lg:justify-start">
+            <p className="text-xl md:text-3xl font-light text-dark-500 tracking-wide">
+              I'm a{" "}
+              <span className="font-semibold text-white border-r-2 border-accent-cyan pr-1.5 animate-pulse">
+                {displayText}
+              </span>
+            </p>
+          </div>
+
+          {/* Action Buttons (CTAs) */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center w-full mb-12" id="hero-ctas">
             <a
-              key={index}
-              href={social.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={social.label}
-              className="p-3 rounded-full bg-dark-900/50 border border-dark-700/60 text-dark-500 hover:text-accent-cyan hover:border-accent-cyan/30 hover:bg-dark-900 transition-all duration-300 hover:-translate-y-1 shadow-sm"
+              href="#projects"
+              onClick={(e) => handleCtaClick(e, "#projects")}
+              className="group relative flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-accent-cyan to-accent-indigo text-dark-950 font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] shadow-cyan-glow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 w-full sm:w-auto text-center"
             >
-              <social.Icon size={20} />
+              View My Projects
+              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform duration-300" />
             </a>
-          ))}
+            <a
+              href="#contact"
+              onClick={(e) => handleCtaClick(e, "#contact")}
+              className="flex items-center justify-center gap-2 px-8 py-4 border border-dark-700 hover:border-slate-300 bg-dark-900/50 hover:bg-dark-900 text-slate-100 font-semibold rounded-xl transition-all duration-300 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-slate-300/30 w-full sm:w-auto text-center"
+            >
+              Let's Talk
+            </a>
+          </div>
+
+          {/* Social Quick Links */}
+          <div className="flex gap-6 justify-center lg:justify-start items-center w-full">
+            {[
+              { Icon: Github, href: "https://github.com", label: "GitHub" },
+              { Icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
+              { Icon: Twitter, href: "https://twitter.com", label: "Twitter" },
+              { Icon: Mail, href: "mailto:abdullahafridi12390@gmail.com", label: "Email" }
+            ].map((social, index) => (
+              <a
+                key={index}
+                href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={social.label}
+                className="p-3 rounded-full bg-dark-900/50 border border-dark-700/60 text-dark-500 hover:text-accent-cyan hover:border-accent-cyan/30 hover:bg-dark-900 transition-all duration-300 hover:-translate-y-1 shadow-sm"
+              >
+                <social.Icon size={20} />
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Column - Glowing Profile Photo (spans 5 cols on lg) */}
+        <div className="lg:col-span-5 flex justify-center items-center order-1 lg:order-2">
+          <div className="relative group">
+            {/* Multi-layered futuristic glowing border frames */}
+            <div className="absolute -inset-1.5 bg-gradient-to-r from-accent-cyan to-accent-indigo rounded-full blur-md opacity-25 group-hover:opacity-40 transition-all duration-700 animate-pulse" />
+            
+            <div className="relative w-64 h-64 sm:w-72 sm:h-72 lg:w-80 lg:h-80 rounded-full overflow-hidden border border-white/10 group-hover:border-accent-cyan/40 bg-dark-950 flex items-center justify-center transition-all duration-500 shadow-2xl">
+              {profilePic ? (
+                <img
+                  src={profilePic}
+                  alt="Muhammad Abdullah"
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-103"
+                />
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-24 h-24 text-dark-500">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
